@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -23,19 +22,11 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     private final RateLimiter rateLimiter;
     private final RateLimiterProperties properties;
-    private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        String path = request.getRequestURI();
-
-        if (isExcluded(path)) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         String clientKey = extractClientKey(request);
         RateLimitConfig config = new RateLimitConfig(properties.getMaxTokens(), properties.getRefillRate());
         RateLimitResult result = rateLimiter.isAllowed(clientKey, config);
@@ -52,11 +43,6 @@ public class RateLimitFilter extends OncePerRequestFilter {
                     {"message": "Too many requests. Retry after %d seconds."}
                     """.formatted(result.retryAfterSeconds()));
         }
-    }
-
-    private boolean isExcluded(String path) {
-        return properties.getExcludedPaths().stream()
-                .anyMatch(pattern -> pathMatcher.match(pattern, path));
     }
 
     private String extractClientKey(HttpServletRequest request) {

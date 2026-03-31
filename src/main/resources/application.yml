@@ -10,8 +10,6 @@ spring:
 rate-limiter:
   max-tokens: 10
   refill-rate: 10
-  excluded-paths:
-    - /actuator/**
 
 management:
   endpoints:

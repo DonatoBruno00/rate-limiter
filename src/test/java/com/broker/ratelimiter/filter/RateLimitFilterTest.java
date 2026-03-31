@@ -9,8 +9,6 @@ import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
-import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -21,15 +19,13 @@ class RateLimitFilterTest {
 
     private RateLimiter rateLimiter;
     private RateLimitFilter filter;
-    private RateLimiterProperties properties;
 
     @BeforeEach
     void setUp() {
         rateLimiter = mock(RateLimiter.class);
-        properties = new RateLimiterProperties();
+        RateLimiterProperties properties = new RateLimiterProperties();
         properties.setMaxTokens(10);
         properties.setRefillRate(10);
-        properties.setExcludedPaths(List.of("/actuator/**"));
         filter = new RateLimitFilter(rateLimiter, properties);
     }
 
@@ -39,9 +35,8 @@ class RateLimitFilterTest {
 
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/quotes/AAPL");
         MockHttpServletResponse response = new MockHttpServletResponse();
-        MockFilterChain chain = new MockFilterChain();
 
-        filter.doFilterInternal(request, response, chain);
+        filter.doFilterInternal(request, response, new MockFilterChain());
 
         assertThat(response.getStatus()).isEqualTo(200);
         assertThat(response.getHeader("X-RateLimit-Limit")).isEqualTo("10");
@@ -54,24 +49,11 @@ class RateLimitFilterTest {
 
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/quotes/AAPL");
         MockHttpServletResponse response = new MockHttpServletResponse();
-        MockFilterChain chain = new MockFilterChain();
 
-        filter.doFilterInternal(request, response, chain);
+        filter.doFilterInternal(request, response, new MockFilterChain());
 
         assertThat(response.getStatus()).isEqualTo(429);
         assertThat(response.getHeader("Retry-After")).isEqualTo("12");
-    }
-
-    @Test
-    void shouldSkipRateLimitingForExcludedPaths() throws Exception {
-        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/actuator/health");
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        MockFilterChain chain = new MockFilterChain();
-
-        filter.doFilterInternal(request, response, chain);
-
-        assertThat(response.getStatus()).isEqualTo(200);
-        assertThat(response.getHeader("X-RateLimit-Remaining")).isNull();
     }
 
     @Test
@@ -81,9 +63,8 @@ class RateLimitFilterTest {
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/quotes/AAPL");
         request.addHeader("X-Forwarded-For", "203.0.113.5, 10.0.0.1");
         MockHttpServletResponse response = new MockHttpServletResponse();
-        MockFilterChain chain = new MockFilterChain();
 
-        filter.doFilterInternal(request, response, chain);
+        filter.doFilterInternal(request, response, new MockFilterChain());
 
         assertThat(response.getStatus()).isEqualTo(200);
     }
