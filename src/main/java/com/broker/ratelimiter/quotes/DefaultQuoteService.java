@@ -3,7 +3,6 @@ package com.broker.ratelimiter.quotes;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 
@@ -22,7 +21,7 @@ public class DefaultQuoteService implements QuoteService {
     public Quote getQuote(String symbol) {
         String upperSymbol = symbol.toUpperCase();
         return Optional.ofNullable(PRICES.get(upperSymbol))
-                .map(price -> new Quote(upperSymbol, price, Instant.now()))
+                .map(price -> new Quote(upperSymbol, price))
                 .orElseThrow(() -> new IllegalArgumentException("Unknown symbol: " + symbol));
     }
 }

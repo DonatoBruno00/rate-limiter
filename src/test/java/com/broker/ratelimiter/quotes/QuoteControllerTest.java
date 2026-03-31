@@ -7,7 +7,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -26,13 +25,12 @@ class QuoteControllerTest {
     @Test
     void shouldReturn200WithQuoteForKnownSymbol() throws Exception {
         when(quoteService.getQuote("AAPL"))
-                .thenReturn(new Quote("AAPL", new BigDecimal("189.50"), Instant.now()));
+                .thenReturn(new Quote("AAPL", new BigDecimal("189.50")));
 
         mockMvc.perform(get("/api/quotes/AAPL"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.symbol").value("AAPL"))
-                .andExpect(jsonPath("$.price").value(189.50))
-                .andExpect(jsonPath("$.timestamp").exists());
+                .andExpect(jsonPath("$.price").value(189.50));
     }
 
     @Test

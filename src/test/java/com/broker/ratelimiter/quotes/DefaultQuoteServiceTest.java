@@ -18,7 +18,6 @@ class DefaultQuoteServiceTest {
 
         assertThat(quote.symbol()).isEqualTo(symbol);
         assertThat(quote.price()).isPositive();
-        assertThat(quote.timestamp()).isNotNull();
     }
 
     @Test
