@@ -1,5 +1,7 @@
-package com.broker.ratelimiter.ratelimiter;
+package com.broker.ratelimiter.ratelimiter.redis;
 
+import com.broker.ratelimiter.ratelimiter.RateLimitConfig;
+import com.broker.ratelimiter.ratelimiter.RateLimitResult;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
