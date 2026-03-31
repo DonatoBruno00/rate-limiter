@@ -6,16 +6,26 @@ spring:
     redis:
       host: localhost
       port: 6379
+      timeout: 500ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
 
 rate-limiter:
   max-tokens: 10
   refill-rate: 10
+  excluded-paths:
+    - /actuator/**
+    - /swagger-ui/**
+    - /v3/api-docs/**
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,circuitbreakers
 
 resilience4j:
   circuitbreaker:
@@ -26,7 +36,6 @@ resilience4j:
         failure-rate-threshold: 100
         wait-duration-in-open-state: 30s
         permitted-number-of-calls-in-half-open-state: 2
-        slow-call-rate-threshold: 100
         record-exceptions:
           - org.springframework.data.redis.RedisConnectionFailureException
           - io.lettuce.core.RedisConnectionException

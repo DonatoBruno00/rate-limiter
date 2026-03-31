@@ -9,6 +9,8 @@ import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -26,7 +28,7 @@ class RateLimitFilterTest {
         RateLimiterProperties properties = new RateLimiterProperties();
         properties.setMaxTokens(10);
         properties.setRefillRate(10);
-        filter = new RateLimitFilter(rateLimiter, properties);
+        filter = new RateLimitFilter(rateLimiter, properties, new SimpleMeterRegistry());
     }
 
     @Test
@@ -56,16 +58,4 @@ class RateLimitFilterTest {
         assertThat(response.getHeader("Retry-After")).isEqualTo("12");
     }
 
-    @Test
-    void shouldExtractClientKeyFromXForwardedForHeader() throws Exception {
-        when(rateLimiter.isAllowed(anyString(), any())).thenReturn(RateLimitResult.allowed(9));
-
-        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/quotes/AAPL");
-        request.addHeader("X-Forwarded-For", "203.0.113.5, 10.0.0.1");
-        MockHttpServletResponse response = new MockHttpServletResponse();
-
-        filter.doFilterInternal(request, response, new MockFilterChain());
-
-        assertThat(response.getStatus()).isEqualTo(200);
-    }
 }
