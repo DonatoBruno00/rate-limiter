@@ -1,5 +1,6 @@
 package com.broker.ratelimiter.service;
 
+import com.broker.ratelimiter.exception.SymbolNotFoundException;
 import com.broker.ratelimiter.model.Quote;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -33,7 +34,7 @@ class DefaultQuoteServiceTest {
     @Test
     void shouldThrowForUnknownSymbol() {
         assertThatThrownBy(() -> service.getQuote("UNKNOWN"))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(SymbolNotFoundException.class)
                 .hasMessageContaining("UNKNOWN");
     }
 }

@@ -1,5 +1,6 @@
 package com.broker.ratelimiter.service;
 
+import com.broker.ratelimiter.exception.SymbolNotFoundException;
 import com.broker.ratelimiter.model.Quote;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +24,6 @@ public class DefaultQuoteService implements QuoteService {
         String upperSymbol = symbol.toUpperCase();
         return Optional.ofNullable(PRICES.get(upperSymbol))
                 .map(price -> Quote.builder().symbol(upperSymbol).price(price).build())
-                .orElseThrow(() -> new IllegalArgumentException("Unknown symbol: " + symbol));
+                .orElseThrow(() -> new SymbolNotFoundException(symbol));
     }
 }

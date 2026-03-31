@@ -1,5 +1,6 @@
 package com.broker.ratelimiter.controller;
 
+import com.broker.ratelimiter.exception.SymbolNotFoundException;
 import com.broker.ratelimiter.model.Quote;
 import com.broker.ratelimiter.service.QuoteService;
 import org.junit.jupiter.api.Test;
@@ -38,10 +39,10 @@ class QuoteControllerTest {
     @Test
     void shouldReturn400ForUnknownSymbol() throws Exception {
         when(quoteService.getQuote("UNKNOWN"))
-                .thenThrow(new IllegalArgumentException("Unknown symbol: UNKNOWN"));
+                .thenThrow(new SymbolNotFoundException("UNKNOWN"));
 
         mockMvc.perform(get("/api/quotes/UNKNOWN"))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Unknown symbol: UNKNOWN"));
     }
 
