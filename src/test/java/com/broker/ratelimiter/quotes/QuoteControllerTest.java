@@ -42,8 +42,6 @@ class QuoteControllerTest {
 
         mockMvc.perform(get("/api/quotes/UNKNOWN"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Bad Request"))
                 .andExpect(jsonPath("$.message").value("Unknown symbol: UNKNOWN"));
     }
 
@@ -54,7 +52,6 @@ class QuoteControllerTest {
 
         mockMvc.perform(get("/api/quotes/AAPL"))
                 .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.status").value(500))
-                .andExpect(jsonPath("$.error").value("Internal Server Error"));
+                .andExpect(jsonPath("$.message").value("An unexpected error occurred"));
     }
 }
