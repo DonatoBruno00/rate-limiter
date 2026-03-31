@@ -25,8 +25,7 @@ Elegí **token bucket** sobre las alternativas por tres razones:
 
 Contexto, dado el tiempo a dedicarle sumado a las diferentes opciones y trade offs, sin una necesidad concreta de máxima precisión vs más memoria, decidí token bucket.
 - **Tolerante a bursts**: los clientes pueden acumular tokens hasta el tamaño del bucket y
-  gastarlos en ráfagas cortas. Fixed window y sliding window penalizan bursts que caen cerca
-  del borde de una ventana.
+  gastarlos en ráfagas cortas.
 - **Más simple que otras opciones**: el estado por cliente son solo dos números — tokens restantes y timestamp
 
 ---
@@ -68,11 +67,6 @@ fallback del circuit breaker.
 ---
 
 ## 6. Redis + Script Lua
-
-El estado del token bucket vive en un hash de Redis por cliente:
-```
-rl:192.168.1.1 → { tokens: 9.0, lastRefillMillis: 1711900000000 }
-```
 
 El requisito crítico es la **atomicidad**: leer tokens, refill, consumir, escribir de vuelta —
 todo como una sola unidad. Si dos requests del mismo cliente llegan simultáneamente y ambos leen

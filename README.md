@@ -40,11 +40,6 @@ GET /actuator/circuitbreakers   → estado del circuit breaker (CLOSED=Redis, OP
 curl -i http://localhost:8080/api/quotes/AAPL
 ```
 
-**Agotar el bucket (10 requests seguidos):**
-```bash
-for i in $(seq 1 11); do curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8080/api/quotes/AAPL; done
-```
-
 **Ticker inválido (404):**
 ```bash
 curl -i http://localhost:8080/api/quotes/INVALID
