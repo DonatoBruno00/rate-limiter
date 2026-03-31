@@ -30,8 +30,8 @@ public class ResilientRateLimiter implements RateLimiter {
         try {
             return circuitBreaker.executeSupplier(() -> redisRateLimiter.isAllowed(key, config));
         } catch (Exception cause) {
-            log.warn("Redis rate limiter unavailable ({}), falling back to in-memory bucket for key={}",
-                    cause.getClass().getSimpleName(), key);
+            log.warn("Redis rate limiter unavailable ({}: {}), falling back to in-memory bucket for key={}",
+                    cause.getClass().getSimpleName(), cause.getMessage(), key);
             return fallback.isAllowed(key, config);
         }
     }
