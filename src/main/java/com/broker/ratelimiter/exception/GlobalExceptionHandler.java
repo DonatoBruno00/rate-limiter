@@ -1,4 +1,4 @@
-package com.broker.ratelimiter.quotes;
+package com.broker.ratelimiter.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;

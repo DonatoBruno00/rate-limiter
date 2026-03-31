@@ -1,5 +1,6 @@
-package com.broker.ratelimiter.quotes;
+package com.broker.ratelimiter.service;
 
+import com.broker.ratelimiter.model.Quote;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;

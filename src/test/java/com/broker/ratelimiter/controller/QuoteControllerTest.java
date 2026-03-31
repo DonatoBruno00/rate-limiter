@@ -1,5 +1,7 @@
-package com.broker.ratelimiter.quotes;
+package com.broker.ratelimiter.controller;
 
+import com.broker.ratelimiter.model.Quote;
+import com.broker.ratelimiter.service.QuoteService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;

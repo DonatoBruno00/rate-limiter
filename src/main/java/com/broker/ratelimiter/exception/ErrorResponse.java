@@ -1,3 +1,3 @@
-package com.broker.ratelimiter.quotes;
+package com.broker.ratelimiter.exception;
 
 public record ErrorResponse(String message) {}

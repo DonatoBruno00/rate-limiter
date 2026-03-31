@@ -1,4 +1,4 @@
-package com.broker.ratelimiter.quotes;
+package com.broker.ratelimiter.model;
 
 import java.math.BigDecimal;
 
