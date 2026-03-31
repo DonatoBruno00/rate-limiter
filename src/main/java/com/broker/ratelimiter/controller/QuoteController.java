@@ -15,8 +15,8 @@ public class QuoteController {
 
     private final QuoteService quoteService;
 
-    @GetMapping("/{symbol}")
-    public Quote getQuote(@PathVariable String symbol) {
-        return quoteService.getQuote(symbol);
+    @GetMapping("/{ticker}")
+    public Quote getQuote(@PathVariable String ticker) {
+        return quoteService.getQuote(ticker);
     }
 }

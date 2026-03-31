@@ -6,6 +6,6 @@ import java.math.BigDecimal;
 
 @Builder
 public record Quote(
-        String symbol,
+        String ticker,
         BigDecimal price
 ) {}

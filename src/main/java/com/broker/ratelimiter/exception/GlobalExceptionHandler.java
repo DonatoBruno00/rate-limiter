@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(SymbolNotFoundException.class)
+    @ExceptionHandler(TickerNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleSymbolNotFound(SymbolNotFoundException exception) {
+    public ErrorResponse handleTickerNotFound(TickerNotFoundException exception) {
         return new ErrorResponse(exception.getMessage());
     }
 

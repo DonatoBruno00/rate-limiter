@@ -1,6 +1,6 @@
 package com.broker.ratelimiter.service;
 
-import com.broker.ratelimiter.exception.SymbolNotFoundException;
+import com.broker.ratelimiter.exception.TickerNotFoundException;
 import com.broker.ratelimiter.model.Quote;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -15,10 +15,10 @@ class DefaultQuoteServiceTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"AAPL", "GOOGL", "MSFT", "AMZN", "TSLA"})
-    void shouldReturnQuoteForKnownSymbol(String symbol) {
-        Quote quote = service.getQuote(symbol);
+    void shouldReturnQuoteForKnownTicker(String ticker) {
+        Quote quote = service.getQuote(ticker);
 
-        assertThat(quote.symbol()).isEqualTo(symbol);
+        assertThat(quote.ticker()).isEqualTo(ticker);
         assertThat(quote.price()).isPositive();
     }
 
@@ -27,14 +27,14 @@ class DefaultQuoteServiceTest {
         Quote lower = service.getQuote("aapl");
         Quote upper = service.getQuote("AAPL");
 
-        assertThat(lower.symbol()).isEqualTo(upper.symbol());
+        assertThat(lower.ticker()).isEqualTo(upper.ticker());
         assertThat(lower.price()).isEqualByComparingTo(upper.price());
     }
 
     @Test
-    void shouldThrowForUnknownSymbol() {
+    void shouldThrowForUnknownTicker() {
         assertThatThrownBy(() -> service.getQuote("UNKNOWN"))
-                .isInstanceOf(SymbolNotFoundException.class)
+                .isInstanceOf(TickerNotFoundException.class)
                 .hasMessageContaining("UNKNOWN");
     }
 }

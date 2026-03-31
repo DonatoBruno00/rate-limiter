@@ -4,5 +4,5 @@ import com.broker.ratelimiter.model.Quote;
 
 public interface QuoteService {
 
-    Quote getQuote(String symbol);
+    Quote getQuote(String ticker);
 }

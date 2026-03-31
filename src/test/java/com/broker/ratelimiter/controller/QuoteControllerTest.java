@@ -1,6 +1,6 @@
 package com.broker.ratelimiter.controller;
 
-import com.broker.ratelimiter.exception.SymbolNotFoundException;
+import com.broker.ratelimiter.exception.TickerNotFoundException;
 import com.broker.ratelimiter.model.Quote;
 import com.broker.ratelimiter.service.QuoteService;
 import org.junit.jupiter.api.Test;
@@ -26,24 +26,24 @@ class QuoteControllerTest {
     private QuoteService quoteService;
 
     @Test
-    void shouldReturn200WithQuoteForKnownSymbol() throws Exception {
+    void shouldReturn200WithQuoteForKnownTicker() throws Exception {
         when(quoteService.getQuote("AAPL"))
-                .thenReturn(Quote.builder().symbol("AAPL").price(new BigDecimal("189.50")).build());
+                .thenReturn(Quote.builder().ticker("AAPL").price(new BigDecimal("189.50")).build());
 
         mockMvc.perform(get("/api/quotes/AAPL"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.symbol").value("AAPL"))
+                .andExpect(jsonPath("$.ticker").value("AAPL"))
                 .andExpect(jsonPath("$.price").value(189.50));
     }
 
     @Test
-    void shouldReturn400ForUnknownSymbol() throws Exception {
+    void shouldReturn404ForUnknownTicker() throws Exception {
         when(quoteService.getQuote("UNKNOWN"))
-                .thenThrow(new SymbolNotFoundException("UNKNOWN"));
+                .thenThrow(new TickerNotFoundException("UNKNOWN"));
 
         mockMvc.perform(get("/api/quotes/UNKNOWN"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Unknown symbol: UNKNOWN"));
+                .andExpect(jsonPath("$.message").value("Unknown ticker: UNKNOWN"));
     }
 
     @Test
