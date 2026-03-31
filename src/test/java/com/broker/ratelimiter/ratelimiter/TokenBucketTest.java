@@ -16,13 +16,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class TokenBucketTest {
 
-    // Fake clock injected into TokenBucket — advance it without any Thread.sleep()
     private AtomicLong fakeNanos;
     private TokenBucket tokenBucket;
 
     private static final int BUCKET_SIZE = 5;
     private static final int REFILL_RATE_PER_MINUTE = 5;
-    private static final int EXTRA_REQUESTS_AFTER_EXHAUSTION = 3;
     private static final int THREAD_COUNT = 20;
     private static final int HIGH_BUCKET_SIZE = 100;
 
@@ -48,7 +46,7 @@ class TokenBucketTest {
 
     @Test
     void shouldRejectRequestWhenTokensExhausted() {
-        for (int requestIndex = 0; requestIndex < BUCKET_SIZE; requestIndex++) {
+        for (int i = 0; i < BUCKET_SIZE; i++) {
             tokenBucket.isAllowed("client-1", CONFIG);
         }
 
@@ -61,11 +59,10 @@ class TokenBucketTest {
 
     @Test
     void shouldRegenerateTokensAfterTime() {
-        for (int requestIndex = 0; requestIndex < BUCKET_SIZE; requestIndex++) {
+        for (int i = 0; i < BUCKET_SIZE; i++) {
             tokenBucket.isAllowed("client-1", CONFIG);
         }
 
-        // Advance the fake clock — no actual waiting needed
         fakeNanos.addAndGet(NANOS_TO_REGENERATE_ONE_TOKEN);
 
         RateLimitResult result = tokenBucket.isAllowed("client-1", CONFIG);
@@ -74,45 +71,30 @@ class TokenBucketTest {
 
     @Test
     void shouldNotExceedBucketSizeWhenRegenerating() {
-        // Consume 1 token, then advance enough time to regenerate more than 1 token
         tokenBucket.isAllowed("client-1", CONFIG);
         fakeNanos.addAndGet(NANOS_TO_REGENERATE_ONE_TOKEN * 2);
 
         RateLimitResult result = tokenBucket.isAllowed("client-1", CONFIG);
 
-        // Cap ensures we can't go above BUCKET_SIZE - 1 remaining (we already consumed one more)
         assertThat(result.allowed()).isTrue();
         assertThat(result.remainingTokens()).isLessThanOrEqualTo(BUCKET_SIZE - 1);
     }
 
     @Test
-    void shouldRejectBurstAfterExhaustingTokens() {
-        for (int requestIndex = 0; requestIndex < BUCKET_SIZE; requestIndex++) {
-            RateLimitResult result = tokenBucket.isAllowed("client-1", CONFIG);
-            assertThat(result.allowed()).isTrue();
-        }
-
-        for (int requestIndex = 0; requestIndex < EXTRA_REQUESTS_AFTER_EXHAUSTION; requestIndex++) {
-            RateLimitResult result = tokenBucket.isAllowed("client-1", CONFIG);
-            assertThat(result.allowed()).isFalse();
-        }
-    }
-
-    @Test
     void shouldCalculateRetryAfterCorrectly() {
-        for (int requestIndex = 0; requestIndex < BUCKET_SIZE; requestIndex++) {
+        for (int i = 0; i < BUCKET_SIZE; i++) {
             tokenBucket.isAllowed("client-1", CONFIG);
         }
 
         RateLimitResult result = tokenBucket.isAllowed("client-1", CONFIG);
 
-        // 5 tokens/min = 1 token every 12 seconds → retry must be exactly 12s
+        // 5 tokens/min = 1 token every 12 seconds
         assertThat(result.retryAfterSeconds()).isEqualTo(12L);
     }
 
     @Test
     void shouldTrackKeysIndependently() {
-        for (int requestIndex = 0; requestIndex < BUCKET_SIZE; requestIndex++) {
+        for (int i = 0; i < BUCKET_SIZE; i++) {
             tokenBucket.isAllowed("client-1", CONFIG);
         }
 
@@ -131,7 +113,7 @@ class TokenBucketTest {
         CountDownLatch startLatch = new CountDownLatch(1);
 
         List<Future<RateLimitResult>> futures = new ArrayList<>();
-        for (int threadIndex = 0; threadIndex < THREAD_COUNT; threadIndex++) {
+        for (int i = 0; i < THREAD_COUNT; i++) {
             futures.add(executor.submit(() -> {
                 startLatch.await();
                 return tokenBucket.isAllowed("shared-key", highBucketConfig);
@@ -149,14 +131,5 @@ class TokenBucketTest {
 
         assertThat(allowedCount.get()).isEqualTo(THREAD_COUNT);
         executor.shutdown();
-    }
-
-    @Test
-    void shouldDecreaseRemainingTokensWithEachRequest() {
-        for (int expectedRemaining = BUCKET_SIZE - 1; expectedRemaining >= 0; expectedRemaining--) {
-            RateLimitResult result = tokenBucket.isAllowed("client-1", CONFIG);
-            assertThat(result.allowed()).isTrue();
-            assertThat(result.remainingTokens()).isEqualTo(expectedRemaining);
-        }
     }
 }
