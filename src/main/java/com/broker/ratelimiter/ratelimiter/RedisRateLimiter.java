@@ -25,6 +25,8 @@ public class RedisRateLimiter implements RateLimiter {
         String refillRatePerSec = String.valueOf(config.refillRatePerSecond());
         String currentTimeMs    = String.valueOf(nowMillis);
 
+        // DefaultRedisScript<List> uses raw List because Lua arrays can contain mixed types.
+        // The cast is safe here: our Lua script always returns {Long, Long, Long}.
         @SuppressWarnings("unchecked")
         List<Long> scriptResult = (List<Long>) redisTemplate.execute(
                 rateLimitScript,

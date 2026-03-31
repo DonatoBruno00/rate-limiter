@@ -44,5 +44,7 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
-    environment("DOCKER_API_VERSION", "1.44")
+    // Docker Desktop 29.x requires minimum API 1.44.
+    // Testcontainers' shaded docker-java defaults to 1.32 — this overrides it via system property.
+    systemProperty("api.version", "1.44")
 }
