@@ -27,7 +27,7 @@ class QuoteControllerTest {
     @Test
     void shouldReturn200WithQuoteForKnownSymbol() throws Exception {
         when(quoteService.getQuote("AAPL"))
-                .thenReturn(new Quote("AAPL", new BigDecimal("189.50")));
+                .thenReturn(Quote.builder().symbol("AAPL").price(new BigDecimal("189.50")).build());
 
         mockMvc.perform(get("/api/quotes/AAPL"))
                 .andExpect(status().isOk())

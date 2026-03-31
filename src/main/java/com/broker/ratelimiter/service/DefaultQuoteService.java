@@ -22,7 +22,7 @@ public class DefaultQuoteService implements QuoteService {
     public Quote getQuote(String symbol) {
         String upperSymbol = symbol.toUpperCase();
         return Optional.ofNullable(PRICES.get(upperSymbol))
-                .map(price -> new Quote(upperSymbol, price))
+                .map(price -> Quote.builder().symbol(upperSymbol).price(price).build())
                 .orElseThrow(() -> new IllegalArgumentException("Unknown symbol: " + symbol));
     }
 }
