@@ -10,25 +10,31 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class TokenBucketTest {
 
+    // Fake clock injected into TokenBucket — advance it without any Thread.sleep()
+    private AtomicLong fakeNanos;
     private TokenBucket tokenBucket;
 
     private static final int BUCKET_SIZE = 5;
     private static final int REFILL_RATE_PER_MINUTE = 5;
-    private static final int SECONDS_TO_REGENERATE_ONE_TOKEN = 13;
     private static final int EXTRA_REQUESTS_AFTER_EXHAUSTION = 3;
     private static final int THREAD_COUNT = 20;
     private static final int HIGH_BUCKET_SIZE = 100;
+
+    // With 5 tokens/min: 1 token every 12 seconds — advance 13s to guarantee refill
+    private static final long NANOS_TO_REGENERATE_ONE_TOKEN = 13L * 1_000_000_000L;
 
     private static final RateLimitConfig CONFIG = new RateLimitConfig(BUCKET_SIZE, REFILL_RATE_PER_MINUTE);
 
     @BeforeEach
     void setUp() {
-        tokenBucket = new TokenBucket();
+        fakeNanos = new AtomicLong(0);
+        tokenBucket = new TokenBucket(fakeNanos::get);
     }
 
     @Test
@@ -54,24 +60,27 @@ class TokenBucketTest {
     }
 
     @Test
-    void shouldRegenerateTokensAfterTime() throws InterruptedException {
+    void shouldRegenerateTokensAfterTime() {
         for (int requestIndex = 0; requestIndex < BUCKET_SIZE; requestIndex++) {
             tokenBucket.isAllowed("client-1", CONFIG);
         }
 
-        Thread.sleep(SECONDS_TO_REGENERATE_ONE_TOKEN * 1_000L);
+        // Advance the fake clock — no actual waiting needed
+        fakeNanos.addAndGet(NANOS_TO_REGENERATE_ONE_TOKEN);
 
         RateLimitResult result = tokenBucket.isAllowed("client-1", CONFIG);
         assertThat(result.allowed()).isTrue();
     }
 
     @Test
-    void shouldNotExceedBucketSizeWhenRegenerating() throws InterruptedException {
+    void shouldNotExceedBucketSizeWhenRegenerating() {
+        // Consume 1 token, then advance enough time to regenerate more than 1 token
         tokenBucket.isAllowed("client-1", CONFIG);
-        Thread.sleep(SECONDS_TO_REGENERATE_ONE_TOKEN * 1_000L);
+        fakeNanos.addAndGet(NANOS_TO_REGENERATE_ONE_TOKEN * 2);
 
         RateLimitResult result = tokenBucket.isAllowed("client-1", CONFIG);
 
+        // Cap ensures we can't go above BUCKET_SIZE - 1 remaining (we already consumed one more)
         assertThat(result.allowed()).isTrue();
         assertThat(result.remainingTokens()).isLessThanOrEqualTo(BUCKET_SIZE - 1);
     }
@@ -97,8 +106,8 @@ class TokenBucketTest {
 
         RateLimitResult result = tokenBucket.isAllowed("client-1", CONFIG);
 
-        // 5 tokens/min = 1 token cada 12 segundos
-        assertThat(result.retryAfterSeconds()).isBetween(1L, (long) SECONDS_TO_REGENERATE_ONE_TOKEN);
+        // 5 tokens/min = 1 token every 12 seconds → retry must be exactly 12s
+        assertThat(result.retryAfterSeconds()).isEqualTo(12L);
     }
 
     @Test

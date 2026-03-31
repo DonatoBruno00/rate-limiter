@@ -2,6 +2,7 @@ package com.broker.ratelimiter.ratelimiter;
 
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.LongSupplier;
 
 public class TokenBucket implements RateLimiter {
 
@@ -16,11 +17,23 @@ public class TokenBucket implements RateLimiter {
     // One bucket per client key (e.g. "rl:192.168.1.1:/api/quotes")
     private final ConcurrentHashMap<String, Evaluation> buckets = new ConcurrentHashMap<>();
 
+    // Swappable clock — real code uses System.nanoTime(), tests inject a fake clock
+    private final LongSupplier clock;
+
+    public TokenBucket() {
+        this.clock = System::nanoTime;
+    }
+
+    // For tests: inject a fake clock to control time without Thread.sleep()
+    TokenBucket(LongSupplier clock) {
+        this.clock = clock;
+    }
+
     @Override
     public RateLimitResult isAllowed(String key, RateLimitConfig config) {
         // compute() locks this key atomically — no two threads can modify the same key at once
         Evaluation evaluation = buckets.compute(key, (bucketKey, currentEvaluation) -> {
-            long nowNanos = System.nanoTime();
+            long nowNanos = clock.getAsLong();
 
             // First request for this key: start with a full bucket
             BucketState currentBucketState = Optional.ofNullable(currentEvaluation)
