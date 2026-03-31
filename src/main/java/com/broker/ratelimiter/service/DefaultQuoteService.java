@@ -1,5 +1,7 @@
-package com.broker.ratelimiter.quotes;
+package com.broker.ratelimiter.service;
 
+import com.broker.ratelimiter.exception.TickerNotFoundException;
+import com.broker.ratelimiter.model.Quote;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -18,10 +20,10 @@ public class DefaultQuoteService implements QuoteService {
     );
 
     @Override
-    public Quote getQuote(String symbol) {
-        String upperSymbol = symbol.toUpperCase();
-        return Optional.ofNullable(PRICES.get(upperSymbol))
-                .map(price -> new Quote(upperSymbol, price))
-                .orElseThrow(() -> new IllegalArgumentException("Unknown symbol: " + symbol));
+    public Quote getQuote(String ticker) {
+        String upperTicker = ticker.toUpperCase();
+        return Optional.ofNullable(PRICES.get(upperTicker))
+                .map(price -> Quote.builder().ticker(upperTicker).price(price).build())
+                .orElseThrow(() -> new TickerNotFoundException(ticker));
     }
 }

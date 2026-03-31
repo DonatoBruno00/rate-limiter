@@ -1,5 +1,8 @@
-package com.broker.ratelimiter.quotes;
+package com.broker.ratelimiter.controller;
 
+import com.broker.ratelimiter.exception.TickerNotFoundException;
+import com.broker.ratelimiter.model.Quote;
+import com.broker.ratelimiter.service.QuoteService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -23,24 +26,24 @@ class QuoteControllerTest {
     private QuoteService quoteService;
 
     @Test
-    void shouldReturn200WithQuoteForKnownSymbol() throws Exception {
+    void shouldReturn200WithQuoteForKnownTicker() throws Exception {
         when(quoteService.getQuote("AAPL"))
-                .thenReturn(new Quote("AAPL", new BigDecimal("189.50")));
+                .thenReturn(Quote.builder().ticker("AAPL").price(new BigDecimal("189.50")).build());
 
         mockMvc.perform(get("/api/quotes/AAPL"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.symbol").value("AAPL"))
+                .andExpect(jsonPath("$.ticker").value("AAPL"))
                 .andExpect(jsonPath("$.price").value(189.50));
     }
 
     @Test
-    void shouldReturn400ForUnknownSymbol() throws Exception {
+    void shouldReturn404ForUnknownTicker() throws Exception {
         when(quoteService.getQuote("UNKNOWN"))
-                .thenThrow(new IllegalArgumentException("Unknown symbol: UNKNOWN"));
+                .thenThrow(new TickerNotFoundException("UNKNOWN"));
 
         mockMvc.perform(get("/api/quotes/UNKNOWN"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Unknown symbol: UNKNOWN"));
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Unknown ticker: UNKNOWN"));
     }
 
     @Test

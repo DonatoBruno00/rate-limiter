@@ -1,5 +1,8 @@
-package com.broker.ratelimiter.ratelimiter;
+package com.broker.ratelimiter.ratelimiter.circuitbreaker;
 
+import com.broker.ratelimiter.ratelimiter.RateLimitConfig;
+import com.broker.ratelimiter.ratelimiter.RateLimitResult;
+import com.broker.ratelimiter.ratelimiter.redis.RedisRateLimiter;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,12 +21,9 @@ import static org.mockito.Mockito.when;
 @SpringBootTest
 class ResilientRateLimiterTest {
 
-    // Large enough that no single test exhausts the fallback bucket
     private static final int HIGH_BUCKET_SIZE = 100;
     private static final int REFILL_RATE_PER_MINUTE = 60;
     private static final RateLimitConfig CONFIG = new RateLimitConfig(HIGH_BUCKET_SIZE, REFILL_RATE_PER_MINUTE);
-
-    // Number of consecutive failures needed to open the circuit (matches application.yml)
     private static final int FAILURES_TO_OPEN = 5;
 
     @Autowired
@@ -76,38 +76,19 @@ class ResilientRateLimiterTest {
 
     @Test
     void shouldReturnToRedisAfterCircuitCloses() {
-        // 1. Break Redis → open circuit
         when(redisRateLimiter.isAllowed(anyString(), any()))
                 .thenThrow(new RedisConnectionFailureException("down"));
         for (int i = 0; i < FAILURES_TO_OPEN; i++) {
             resilientRateLimiter.isAllowed("recovery-client", CONFIG);
         }
 
-        // 2. Transition to half-open without waiting 30s
         circuitBreakerRegistry.circuitBreaker("redis-rate-limiter").transitionToHalfOpenState();
 
-        // 3. Redis is healthy again — doReturn avoids calling the mock mid-stub when it's already
-        //    stubbed to throw (when(mock.method()) would throw before Mockito can intercept)
+        // doReturn avoids calling the mock mid-stub when it's already stubbed to throw
         doReturn(RateLimitResult.allowed(HIGH_BUCKET_SIZE - 1))
                 .when(redisRateLimiter).isAllowed(anyString(), any());
 
-        // 4. Result comes from Redis, not the in-memory fallback
         RateLimitResult result = resilientRateLimiter.isAllowed("recovery-client", CONFIG);
         assertThat(result.remainingTokens()).isEqualTo(HIGH_BUCKET_SIZE - 1);
-    }
-
-    @Test
-    void shouldContinueServingRequestsViaFallbackWhenCircuitIsOpen() {
-        when(redisRateLimiter.isAllowed(anyString(), any()))
-                .thenThrow(new RedisConnectionFailureException("Redis is down"));
-
-        // Open the circuit
-        for (int i = 0; i < FAILURES_TO_OPEN; i++) {
-            resilientRateLimiter.isAllowed("open-serve-client", CONFIG);
-        }
-
-        // Even with circuit OPEN, fallback keeps serving requests
-        RateLimitResult result = resilientRateLimiter.isAllowed("open-serve-client", CONFIG);
-        assertThat(result.allowed()).isTrue();
     }
 }

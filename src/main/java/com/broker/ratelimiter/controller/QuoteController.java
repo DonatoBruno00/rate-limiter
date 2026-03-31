@@ -1,5 +1,7 @@
-package com.broker.ratelimiter.quotes;
+package com.broker.ratelimiter.controller;
 
+import com.broker.ratelimiter.model.Quote;
+import com.broker.ratelimiter.service.QuoteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,8 +15,8 @@ public class QuoteController {
 
     private final QuoteService quoteService;
 
-    @GetMapping("/{symbol}")
-    public Quote getQuote(@PathVariable String symbol) {
-        return quoteService.getQuote(symbol);
+    @GetMapping("/{ticker}")
+    public Quote getQuote(@PathVariable String ticker) {
+        return quoteService.getQuote(ticker);
     }
 }
