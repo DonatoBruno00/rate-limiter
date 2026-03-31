@@ -1,21 +1,34 @@
 server:
   port: 8080
 
+spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+rate-limiter:
+  max-tokens: 10
+  refill-rate: 10
+  excluded-paths:
+    - /actuator/**
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
 resilience4j:
   circuitbreaker:
     instances:
       redis-rate-limiter:
-        # Open after 5 consecutive failures
         sliding-window-type: COUNT_BASED
         sliding-window-size: 5
         failure-rate-threshold: 100
-        # Stay open for 30s, then move to half-open
         wait-duration-in-open-state: 30s
-        # Allow 2 trial calls in half-open before closing
         permitted-number-of-calls-in-half-open-state: 2
-        # Only count exceptions (not slow calls) as failures
         slow-call-rate-threshold: 100
-        # Exceptions that count as failures
         record-exceptions:
           - org.springframework.data.redis.RedisConnectionFailureException
           - io.lettuce.core.RedisConnectionException

@@ -1,12 +1,15 @@
 package com.broker.ratelimiter.controller;
 
 import com.broker.ratelimiter.exception.TickerNotFoundException;
+import com.broker.ratelimiter.filter.RateLimitFilter;
 import com.broker.ratelimiter.model.Quote;
 import com.broker.ratelimiter.service.QuoteService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
@@ -16,7 +19,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(QuoteController.class)
+@WebMvcTest(value = QuoteController.class,
+        excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = RateLimitFilter.class))
 class QuoteControllerTest {
 
     @Autowired
