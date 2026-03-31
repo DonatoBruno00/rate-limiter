@@ -22,24 +22,20 @@ public class RedisRateLimiter implements RateLimiter {
 
     @Override
     public RateLimitResult isAllowed(String key, RateLimitConfig config) {
-        long nowMillis = System.currentTimeMillis();
-
-        String bucketSize       = String.valueOf(config.bucketSize());
-        String refillRatePerSec = String.valueOf(config.refillRatePerSecond());
-        String currentTimeMs    = String.valueOf(nowMillis);
-
         // DefaultRedisScript<List> uses raw List because Lua arrays can contain mixed types.
         // The cast is safe here: our Lua script always returns {Long, Long, Long}.
         @SuppressWarnings("unchecked")
         List<Long> scriptResult = (List<Long>) redisTemplate.execute(
                 rateLimitScript,
                 List.of(key),
-                bucketSize, refillRatePerSec, currentTimeMs
+                String.valueOf(config.bucketSize()),
+                String.valueOf(config.refillRatePerSecond()),
+                String.valueOf(System.currentTimeMillis())
         );
 
-        boolean allowed           = scriptResult.get(0) == 1L;
-        int remainingTokens       = scriptResult.get(1).intValue();
-        long retryAfterSeconds    = scriptResult.get(2);
+        boolean allowed        = scriptResult.get(0) == 1L;
+        int remainingTokens    = scriptResult.get(1).intValue();
+        long retryAfterSeconds = scriptResult.get(2);
 
         return allowed
                 ? RateLimitResult.allowed(remainingTokens)

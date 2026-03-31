@@ -33,6 +33,9 @@ dependencies {
     implementation("io.github.resilience4j:resilience4j-circuitbreaker:${property("resilience4jVersion")}")
     implementation("io.micrometer:micrometer-registry-prometheus")
 
+    implementation("org.apache.commons:commons-pool2")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
+
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
 
